@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Function to get DNS record type and destination
+get_dns_info() {
+    local subdomain=$1
+    local domain=$2
+
+    # Use dig to get DNS record
+    record=$(dig +short "$subdomain.$domain" ANY)
+
+    if [[ -z "$record" ]]; then
+        echo "No record found for $subdomain.$domain"
+        return
+    fi
+
+    # Determine record type and destination
+    record_type=$(dig +short "$subdomain.$domain" ANY | awk 'NR==2 {print $1}')
+    destination=$(dig +short "$subdomain.$domain" ANY | awk 'NR==1 {print $1}')
+
+    echo "The subdomain $subdomain.$domain is a $record_type record and points to $destination"
+}
+
+# Check for required parameters
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 <domain> [subdomain]"
+    exit 1
+fi
+
+# Variables
+DOMAIN=$1
+SUBDOMAIN=$2
+
+# If only domain is provided, check for default subdomains
+if [[ -z "$SUBDOMAIN" ]]; then
+    for sub in www lb-01 web-01 web-02; do
+        get_dns_info "$sub" "$DOMAIN"
+    done
+else
+    # Check for specific subdomain
+    get_dns_info "$SUBDOMAIN" "$DOMAIN"
+fi
