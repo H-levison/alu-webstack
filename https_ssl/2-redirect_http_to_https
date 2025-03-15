@@ -1,0 +1,40 @@
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+    tune.ssl.default-dh-param 2048
+    ssl-default-bind-options no-sslv3 no-tls-tickets
+    ssl-default-bind-ciphers HIGH:!aNULL:!MD5
+
+defaults
+    mode http
+    log global
+    option httplog
+    option dontlognull
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+frontend http_front
+    bind *:80
+    redirect scheme https code 301 if !{ ssl_fc }
+
+frontend https_front
+    bind *:433 ssl crt /etc/haproxy/ssl/honourgod.pem
+    default_backend web_servers
+
+backend web_servers
+    balance roundrobin
+    server 6475-web-01 54.161.60.25:80 check
+    server 6475-web-02 3.86.91.179:80 check
