@@ -31,7 +31,7 @@ frontend http_front
     redirect scheme https code 301 if !{ ssl_fc }
 
 frontend https_front
-    bind *:433 ssl crt /etc/haproxy/ssl/honourgod.pem
+    bind *:443 ssl crt /etc/haproxy/ssl/honourgod.pem
     default_backend web_servers
 
 backend web_servers
